@@ -27,7 +27,7 @@ u_create_image () {
 u_set_image_name () {
 	local newpath
 	newpath="$(dirname "${1:?}")/${2:?}"
-	mv "${1}" "$newpath"
+	mv -T "${1}" "$newpath"
 	echo "$newpath"
 }
 
