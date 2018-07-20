@@ -1,4 +1,4 @@
-. ${UTILSDIR:?}/common; _u_set_loaded umoci
+. ${UTILSDIR:?}/common.inc.sh; _u_set_loaded umoci
 
 test -x "${UMOCI:=$(command -v umoci)}" || return
 

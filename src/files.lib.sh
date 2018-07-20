@@ -1,4 +1,4 @@
-. ${UTILSDIR:?}/common; _u_set_loaded files
+. ${UTILSDIR:?}/common.inc.sh; _u_set_loaded files
 
 ### file handling
 
