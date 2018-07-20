@@ -1,15 +1,11 @@
+. ${UTILSDIR:?}/common; _u_set_loaded umoci
+
 test -x "${UMOCI:=$(command -v umoci)}" || return
 
-### cleanup functions
-
-u_cleanup () {
+u_cleanup_umoci () {
 	# use ???? to not accidentally delete other files
 	rm -rf ${BUILDDIR:-.}/image.????
 	rm -rf ${BUILDDIR:-.}/bundle.????
-}
-
-u_set_autoclean () {
-	trap u_cleanup EXIT
 }
 
 ### images

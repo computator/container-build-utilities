@@ -1,3 +1,5 @@
+. ${UTILSDIR:?}/common; _u_set_loaded files
+
 ### file handling
 
 u_get_asset () {
