@@ -28,6 +28,14 @@ u_clean_image () {
 	${UMOCI} gc --layout "${1:?}"
 }
 
+u_serialize_image () {
+	local archive
+	archive="${BUILDDIR:-.}/${2:?}.oci"
+	( cd "${1:?}" && find -mindepth 1 -maxdepth 1 | sed 's:^./::' ) | \
+		tar -c --hard-dereference --numeric-owner --owner 0 --group 0 -z -f "$archive" -C "${1}" --files-from -
+	echo "$archive"
+}
+
 ### image refs
 
 u_gen_tagname () {
