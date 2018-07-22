@@ -74,15 +74,31 @@ u_serialize_image () {
 
 ### image refs
 
-u_gen_tagname () {
+u_gen_refname () {
 	mktemp -u "${1:+$1:}XXXX"
 }
 
 u_create_ref () {
 	local ref
-	ref=$(u_gen_tagname "${1:?}")
+	ref=$(u_gen_refname "${1:?}")
 	${UMOCI} new --image "$ref"
 	echo "$ref"
+}
+
+u_clone_ref () {
+	local oldref tag
+	oldref=$(u_get_ref "${1:?}" "${2:?}")
+	tag=$(u_gen_refname)
+	u_write_ref "$oldref" "$tag"
+	echo $(u_get_ref "$1" "$tag")
+}
+
+u_get_ref () {
+	echo "${1:?}:${2:?}"
+}
+
+u_list_refs () {
+	${UMOCI} list --layout "${1:?}"
 }
 
 u_write_ref () {
@@ -91,6 +107,22 @@ u_write_ref () {
 
 u_remove_ref () {
 	${UMOCI} rm --image "${1:?}"
+}
+
+u_remove_refs_except () {
+	local img ref exclude
+	img="${1:?}"
+	shift
+	[ $# -ge 1 ] || return
+	for ref in "$@"; do
+		# remove image prefix (if any) when adding to the exclude list
+		exclude="${exclude} ${ref#*:}"
+	done
+	for ref in $(u_list_refs "$img"); do
+		if ! echo "$exclude" | grep -qwF "$ref"; then
+			u_remove_ref $(u_get_ref "$img" "$ref")
+		fi
+	done
 }
 
 ### image ref layers
