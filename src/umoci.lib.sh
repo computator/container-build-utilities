@@ -6,6 +6,8 @@ u_cleanup_umoci () {
 	# use ???? to not accidentally delete other files
 	rm -rf ${BUILDDIR:-.}/image.????
 	rm -rf ${BUILDDIR:-.}/bundle.????
+	rm -rf ${BUILDDIR:-.}/imgclone.????
+	rm -rf ${BUILDDIR:-.}/imgopen.????
 }
 
 ### images
@@ -15,6 +17,40 @@ u_create_image () {
 	path=$(mktemp -udp "${BUILDDIR:-.}" image.XXXX)
 	${UMOCI} init --layout "$path"
 	echo "$path"
+}
+
+u_clone_image () {
+	local img path src
+	img="${1:?}"
+	if [ -d "${BUILDDIR:-.}/${img}" ]; then
+		src="${BUILDDIR:-.}/${img}"
+		path=$(mktemp -dp "${BUILDDIR:-.}" imgclone.XXXX)
+		# hardlink files in blobs to save space
+		cp -r -l "${src}/blobs" "$path"
+		# copy everything else normally
+		cp -r $(find "$src" -mindepth 1 -maxdepth 1 ! -path "${src}/blobs") "$path"
+		echo "$path"
+	elif [ -f "${BUILDDIR:-.}/${img}.oci" ]; then
+		path=$(mktemp -dp "${BUILDDIR:-.}" imgclone.XXXX)
+		tar -xzf "${BUILDDIR:-.}/${img}.oci" -C "$path"
+		echo "$path"
+	else
+		return 1
+	fi
+}
+
+u_open_image () {
+	local img path
+	img="${1:?}"
+	if [ -d "${BUILDDIR:-.}/${img}" ]; then
+		echo "${BUILDDIR:-.}/${img}"
+	elif [ -f "${BUILDDIR:-.}/${img}.oci" ]; then
+		path=$(mktemp -dp "${BUILDDIR:-.}" imgopen.XXXX)
+		tar -xzf "${BUILDDIR:-.}/${img}.oci" -C "$path"
+		echo "$path"
+	else
+		return 1
+	fi
 }
 
 u_set_image_name () {
