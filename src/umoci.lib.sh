@@ -25,6 +25,8 @@ u_clone_image () {
 	if [ -d "${BUILDDIR:-.}/${img}" ]; then
 		src="${BUILDDIR:-.}/${img}"
 		path=$(mktemp -dp "${BUILDDIR:-.}" imgclone.XXXX)
+		# reset mode
+		chmod $(printf %o $((0777 & ~$(umask)))) "$path"
 		# hardlink files in blobs to save space
 		cp -r -l "${src}/blobs" "$path"
 		# copy everything else normally
@@ -32,6 +34,8 @@ u_clone_image () {
 		echo "$path"
 	elif [ -f "${BUILDDIR:-.}/${img}.oci" ]; then
 		path=$(mktemp -dp "${BUILDDIR:-.}" imgclone.XXXX)
+		# reset mode
+		chmod $(printf %o $((0777 & ~$(umask)))) "$path"
 		tar -xzf "${BUILDDIR:-.}/${img}.oci" -C "$path"
 		echo "$path"
 	else
@@ -46,6 +50,8 @@ u_open_image () {
 		echo "${BUILDDIR:-.}/${img}"
 	elif [ -f "${BUILDDIR:-.}/${img}.oci" ]; then
 		path=$(mktemp -dp "${BUILDDIR:-.}" imgopen.XXXX)
+		# reset mode
+		chmod $(printf %o $((0777 & ~$(umask)))) "$path"
 		tar -xzf "${BUILDDIR:-.}/${img}.oci" -C "$path"
 		echo "$path"
 	else
