@@ -85,11 +85,11 @@ u_create_ref () {
 	echo "$ref"
 }
 
-u_save_ref () {
+u_write_ref () {
 	${UMOCI} tag --image "${1:?}" "${2:?}"
 }
 
-u_close_ref () {
+u_remove_ref () {
 	${UMOCI} rm --image "${1:?}"
 }
 
