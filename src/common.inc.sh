@@ -36,6 +36,9 @@ readonly U_LOG_DEBUG=10
 # defaults to warn
 _u_loglevel=$U_LOG_WARN
 
+_u_has_tput=
+type tput > /dev/null 2>&1 && _u_has_tput=1
+
 # main logging methods
 u_set_loglevel () {
 	# Sets logging level
@@ -52,9 +55,34 @@ u_log () {
 	# Logs a message with the specified loglevel
 	local usg="Usage: u_log {loglevel} {message} [arguments]..."
 	local lvl="${1:?$usg}" msg="${2:?$usg}"
+	local color c_s c_e
 	shift 2
 	[ "$lvl" -ge "$_u_loglevel" ] || return 0
-	printf "$msg\n" "$@" >&2
+	case "$lvl" in
+		$U_LOG_ERROR)
+			lvl="E"
+			color=9 # red
+			;;
+		$U_LOG_WARN)
+			lvl="W"
+			color=11 # yellow
+			;;
+		$U_LOG_INFO)
+			lvl="I"
+			color=12 # blue
+			;;
+		$U_LOG_DEBUG)
+			lvl="D"
+			color=13 # purple
+			;;
+	esac
+	if [ "$_u_has_tput" ] && [ -t 2 ] && [ -n "$color" ]; then
+		c_s=$(tput setaf $color)
+		c_e=$(tput sgr0)
+	fi
+	[ -n "$c_s" ] && echo -n "$c_s" >&2
+	printf "${lvl}:${msg}\n" "$@" >&2
+	[ -n "$c_e" ] && echo -n "$c_e" >&2
 }
 
 # helper logging methods
