@@ -9,6 +9,8 @@ _u_set_loaded() {
 ### cleanup functions
 
 u_cleanup () {
+	# Calls module specific cleanup methods
+	local usg="Usage: u_cleanup"
 	local module
 	for module in $_u_modules_loaded; do
 		if type "u_cleanup_${module}" > /dev/null 2>&1; then
@@ -18,5 +20,7 @@ u_cleanup () {
 }
 
 u_set_autoclean () {
+	# Calls u_cleanup at the end of the script or on error
+	local usg="Usage: u_set_autoclean"
 	trap 'u_cleanup' EXIT
 }

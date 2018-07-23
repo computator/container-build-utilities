@@ -3,6 +3,8 @@
 test -x "${RUNC:=$(command -v runc)}" || return
 
 u_cleanup_runc () {
+	# Cleans up temporary containers
+	local usg="Usage: u_cleanup_runc"
 	local container
 	for container in $(${RUNC} list -q | grep -o 'u_run-temp-instance-\w{4}'); do
 		${RUNC} delete -f "$container"
@@ -12,8 +14,10 @@ u_cleanup_runc () {
 ### execution
 
 u_run () {
+	# Runs the specified command in a container created using a bundle
+	local usg="Usage: u_run {bundle} [exec_options]... -- {command} [arguments]..."
 	local bundle instance options
-	bundle="${1:?}"
+	bundle="${1:?$usg}"
 	shift
 
 	options=""
