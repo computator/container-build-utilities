@@ -24,3 +24,69 @@ u_set_autoclean () {
 	local usg="Usage: u_set_autoclean"
 	trap 'u_cleanup' EXIT
 }
+
+### logging
+
+# Default loglevels
+readonly U_LOG_ERROR=40
+readonly U_LOG_WARN=30
+readonly U_LOG_INFO=20
+readonly U_LOG_DEBUG=10
+
+# defaults to warn
+_u_loglevel=$U_LOG_WARN
+
+# main logging methods
+u_set_loglevel () {
+	# Sets logging level
+	local usg="Usage: u_set_loglevel {loglevel}"
+	# make sure the level is set and is an integer
+	if ! [ "${1:?$usg}" -eq "$1" ] 2> /dev/null; then
+		echo "Invalid loglevel '$1' specified!" >&2
+		return 1
+	fi
+	_u_loglevel=$1
+}
+
+u_log () {
+	# Logs a message with the specified loglevel
+	local usg="Usage: u_log {loglevel} {message} [arguments]..."
+	local lvl="${1:?$usg}" msg="${2:?$usg}"
+	shift 2
+	[ "$lvl" -ge "$_u_loglevel" ] || return 0
+	printf "$msg\n" "$@" >&2
+}
+
+# helper logging methods
+u_log_err () {
+	# Logs an error message
+	local usg="Usage: u_log_err {message} [arguments]..."
+	local msg="${1:?$usg}"
+	shift
+	u_log $U_LOG_ERROR "$msg" "$@"
+}
+
+u_log_warn () {
+	# Logs a warning message
+	local usg="Usage: u_log_warn {message} [arguments]..."
+	local msg="${1:?$usg}"
+	shift
+	u_log $U_LOG_WARN "$msg" "$@"
+}
+
+u_log_info () {
+	# Logs an info message
+	local usg="Usage: u_log_info {message} [arguments]..."
+	local msg="${1:?$usg}"
+	shift
+	u_log $U_LOG_INFO "$msg" "$@"
+}
+
+u_log_dbg () {
+	# Logs a debug message
+	local usg="Usage: u_log_dbg {message} [arguments]..."
+	local msg="${1:?$usg}"
+	shift
+	u_log $U_LOG_DEBUG "$msg" "$@"
+}
+
