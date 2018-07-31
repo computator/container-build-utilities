@@ -7,7 +7,7 @@ u_cleanup_runc () {
 	local usg="Usage: u_cleanup_runc"
 	local container
 	u_log_dbg "Cleaning up temporary containers"
-	for container in $(${RUNC} list -q | grep -o 'u_run-temp-instance-\w{4}'); do
+	for container in $(${RUNC} list -q | grep -o 'u_run-temp-instance-\w\{4\}'); do
 		${RUNC} delete -f "$container"
 	done
 }
