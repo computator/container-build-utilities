@@ -40,13 +40,16 @@ _u_log_sub=0
 _u_has_tput=
 type tput > /dev/null 2>&1 && _u_has_tput=1
 
+# set up fd 6 as a copy of stderr
+exec 6>&2
+
 # main logging methods
 u_set_loglevel () {
 	# Sets logging level
 	local usg="Usage: u_set_loglevel {loglevel}"
 	# make sure the level is set and is an integer
 	if ! [ "${1:?$usg}" -eq "$1" ] 2> /dev/null; then
-		echo "Invalid loglevel '$1' specified!" >&2
+		echo "Invalid loglevel '$1' specified!" >&6
 		return 1
 	fi
 	_u_loglevel=$1
@@ -88,13 +91,16 @@ u_log () {
 			color=13 # purple
 			;;
 	esac
-	if [ "$_u_has_tput" ] && [ -t 2 ] && [ -n "$color" ]; then
-		c_s=$(tput setaf $color)
-		c_e=$(tput sgr0)
-	fi
-	[ -n "$c_s" ] && echo -n "$c_s" >&2
-	printf "${lvl}:$(printf '%*s' $((_u_log_sub * 2)) )${msg}\n" "$@" >&2
-	[ -n "$c_e" ] && echo -n "$c_e" >&2
+	{
+		if [ "$_u_has_tput" ] && [ -t 1 ] && [ -n "$color" ]; then
+			c_s=$(tput setaf $color)
+			c_e=$(tput sgr0)
+		fi
+		[ -n "$c_s" ] && echo -n "$c_s"
+		printf "${lvl}:$(printf '%*s' $((_u_log_sub * 2)) )${msg}\n" "$@"
+		[ -n "$c_e" ] && echo -n "$c_e"
+	} >&6
+	return 0
 }
 
 u_log_exec () {
@@ -102,7 +108,7 @@ u_log_exec () {
 	local usg="Usage: u_log_exec {command} [arguments]..."
 	# Make sure there is at least one argument
 	: "${1:?$usg}"
-	printf "$(printf '%*s' $((_u_log_sub * 2)) )%s\n" "$*" >&2
+	printf "$(printf '%*s' $((_u_log_sub * 2)) )%s\n" "$*" >&6
 	"$@"
 }
 
