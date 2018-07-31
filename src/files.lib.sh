@@ -15,8 +15,8 @@ u_get_asset () {
 			fname=$(_u_uri_as_fname "$uri")
 			cdir="${ASSET_CACHEDIR:-${BUILDDIR:-.}/.assetcache}"
 			path="$cdir/$fname"
-			u_log_info "Storing asset '%s' as '%s'" "$uri" "$path"
 			if [ ! -f "$path" ]; then
+				u_log_info "Storing asset '%s' as '%s'" "$uri" "$path"
 				[ -d "$cdir" ] || mkdir -p "$cdir"
 				wget -nv --show-progress -O "$path" "$uri"
 				if [ $? -ne 0 ]; then
