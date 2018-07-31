@@ -35,6 +35,7 @@ readonly U_LOG_DEBUG=10
 
 # defaults to warn
 _u_loglevel=$U_LOG_WARN
+_u_log_sub=0
 
 _u_has_tput=
 type tput > /dev/null 2>&1 && _u_has_tput=1
@@ -49,6 +50,17 @@ u_set_loglevel () {
 		return 1
 	fi
 	_u_loglevel=$1
+}
+
+u_log_sub() {
+	# Marks subsequent log messages as being from a sub log
+	_u_log_sub=$((_u_log_sub + 1))
+}
+
+u_log_unsub() {
+	# Marks subsequent log messages as being back on the current level
+	[ $_u_log_sub -gt 0 ] || return 0
+	_u_log_sub=$((_u_log_sub - 1))
 }
 
 u_log () {
@@ -81,7 +93,7 @@ u_log () {
 		c_e=$(tput sgr0)
 	fi
 	[ -n "$c_s" ] && echo -n "$c_s" >&2
-	printf "${lvl}:${msg}\n" "$@" >&2
+	printf "${lvl}:$(printf '%*s' $((_u_log_sub * 2)) )${msg}\n" "$@" >&2
 	[ -n "$c_e" ] && echo -n "$c_e" >&2
 }
 

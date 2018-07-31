@@ -46,7 +46,9 @@ u_extract () {
 	local archive="${1:?$usg}" target="${2:?$usg}"
 	local apath
 	u_log_info "Extracting archive '%s' to '%s'" "$archive" "$target"
+	u_log_sub
 	apath="$(u_get_asset "$archive")"
+	u_log_unsub
 	u_log_dbg "Source archive path is: %s" "$apath"
 	mkdir -p "$target"
 	if [ "$(echo -n "${archive##*.}" | tr "[:upper:]" "[:lower:]")" = "zip" ]; then

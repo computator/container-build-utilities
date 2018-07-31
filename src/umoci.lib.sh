@@ -138,7 +138,9 @@ u_create_ref () {
 	# Creates a new blank reference
 	local usg="Usage: u_create_ref {image}"
 	local ref
+	u_log_sub
 	ref=$(u_gen_refname "${1:?$usg}")
+	u_log_unsub
 	u_log_info "Creating image ref '%s'" "${ref#"${BUILDDIR:-.}/"}"
 	${UMOCI} new --image "$ref"
 	echo "$ref"
@@ -148,11 +150,15 @@ u_clone_ref () {
 	# Creates a copy of an existing reference
 	local usg="Usage: u_clone_ref {image} {srcref}"
 	local oldref tag
+	u_log_sub
 	oldref=$(u_get_ref "${1:?$usg}" "${2:?$usg}")
 	tag=$(u_gen_refname)
+	u_log_unsub
 	u_log_info "Cloning image reference '%s' as '%s'" "${oldref#"${BUILDDIR:-.}/"}" "$tag"
+	u_log_sub
 	u_write_ref "$oldref" "$tag"
 	echo $(u_get_ref "$1" "$tag")
+	u_log_unsub
 }
 
 u_get_ref () {
@@ -197,12 +203,14 @@ u_remove_refs_except () {
 		# remove image prefix (if any) when adding to the exclude list
 		exclude="${exclude} ${ref#*:}"
 	done
-	u_log_info "Removing image refs in image '%s' except for: %s" "${img#"${BUILDDIR:-.}/"}" "$exclude"
+	u_log_info "Removing image refs in image '%s' except for: %s" "${img#"${BUILDDIR:-.}/"}" "${exclude# }"
+	u_log_sub
 	for ref in $(u_list_refs "$img"); do
 		if ! echo "$exclude" | grep -qwF "$ref"; then
 			u_remove_ref $(u_get_ref "$img" "$ref")
 		fi
 	done
+	u_log_unsub
 }
 
 ### image ref layers
