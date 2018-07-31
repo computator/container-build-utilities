@@ -6,6 +6,7 @@ u_cleanup_runc () {
 	# Cleans up temporary containers
 	local usg="Usage: u_cleanup_runc"
 	local container
+	u_log_dbg "Cleaning up temporary containers"
 	for container in $(${RUNC} list -q | grep -o 'u_run-temp-instance-\w{4}'); do
 		${RUNC} delete -f "$container"
 	done
@@ -29,6 +30,7 @@ u_run () {
 
 	[ $# -ge 1 ] || return
 
+	u_log_dbg "Patching config.json for bundle '%s'" "$bundle"
 	mv "${bundle}/config.json" "${bundle}/config.json.u_run_orig"
 	sed -e '
 		# disable terminal
@@ -64,9 +66,13 @@ u_run () {
 		' "${bundle}/config.json.u_run_orig" > "${bundle}/config.json"
 
 	instance=$(mktemp -u u_run-temp-instance-XXXX)
+	u_log_info "Creating container '%s' from bundle '%s'" "$instance" "$bundle"
 	${RUNC} create -b "$bundle" "$instance"
+	u_log_info "Running command in container '%s': %s" "$instance" "$*"
 	${RUNC} exec $options "$instance" "$@"
+	u_log_info "Removing container '%s'" "$instance"
 	${RUNC} delete "$instance"
 
+	u_log_dbg "Restoring original config.json for bundle '%s'" "$bundle"
 	mv -f "${bundle}/config.json.u_run_orig" "${bundle}/config.json"
 }
