@@ -97,6 +97,15 @@ u_log () {
 	[ -n "$c_e" ] && echo -n "$c_e" >&2
 }
 
+u_log_exec () {
+	# Logs a command and then runs it
+	local usg="Usage: u_log_exec {command} [arguments]..."
+	# Make sure there is at least one argument
+	: "${1:?$usg}"
+	printf "$(printf '%*s' $((_u_log_sub * 2)) )%s\n" "$*" >&2
+	"$@"
+}
+
 # helper logging methods
 u_log_err () {
 	# Logs an error message
