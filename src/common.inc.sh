@@ -103,13 +103,13 @@ u_log () {
 	return 0
 }
 
-u_log_exec () {
-	# Logs a command and then runs it
-	local usg="Usage: u_log_exec {command} [arguments]..."
+u_log_eval () {
+	# Logs a string and then evaluates it
+	local usg="Usage: u_log_eval {code}..."
 	# Make sure there is at least one argument
 	: "${1:?$usg}"
 	printf "$(printf '%*s' $((_u_log_sub * 2)) )%s\n" "$*" >&6
-	"$@"
+	eval "$@"
 }
 
 # helper logging methods
