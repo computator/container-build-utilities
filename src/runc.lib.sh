@@ -17,13 +17,16 @@ u_cleanup_runc () {
 u_run () {
 	# Runs the specified command in a container created using a bundle
 	local usg="Usage: u_run {bundle} [exec_options]... -- {command} [arguments]..."
-	local bundle instance options
+	local bundle instance options color
 	bundle="${1:?$usg}"
 	shift
 
+	color=1
 	options=""
 	while [ -n "$1" -a "$1" != "--" ]; do
 		options="${options} $1"
+		# disable output colorizing if using a tty
+		[ "$1" = "--tty" -o "$1" = "-t" ] && color=""
 		shift
 	done
 	[ "$1" = "--" ] && shift
@@ -69,7 +72,15 @@ u_run () {
 	u_log_info "Creating container '%s' from bundle '%s'" "$instance" "$bundle"
 	${RUNC} create -b "$bundle" "$instance"
 	u_log_info "Running command in container '%s': %s" "$instance" "$*"
-	${RUNC} exec $options "$instance" "$@"
+	if [ "$color" -a -t 1 ]; then
+		{
+			{
+				${RUNC} exec $options "$instance" "$@" | sed -u "s/^/$(tput setaf 10)sout: /"
+			} 3>&2 2>&1 1>&3 3>&- | sed -u "s/^/$(tput setaf 9)serr: /"
+		} 2>&1 | sed -u "s/$/$(tput sgr0)/"
+	else
+		${RUNC} exec $options "$instance" "$@"
+	fi
 	u_log_info "Removing container '%s'" "$instance"
 	${RUNC} delete "$instance"
 
