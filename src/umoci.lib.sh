@@ -148,16 +148,19 @@ u_create_ref () {
 
 u_clone_ref () {
 	# Creates a copy of an existing reference
-	local usg="Usage: u_clone_ref {image} {srcref}"
+	local usg="Usage: u_clone_ref [ {imgref} | {image} {srcref} ]"
 	local oldref tag
 	u_log_sub
-	oldref=$(u_get_ref "${1:?$usg}" "${2:?$usg}")
+	oldref="${1:?$usg}"
+	if [ "${oldref##*:}" = "$oldref" ]; then
+		oldref=$(u_get_ref "$oldref" "${2:?$usg}")
+	fi
 	tag=$(u_gen_refname)
 	u_log_unsub
 	u_log_info "Cloning image reference '%s' as '%s'" "${oldref#"${BUILDDIR:-.}/"}" "$tag"
 	u_log_sub
 	u_write_ref "$oldref" "$tag"
-	echo $(u_get_ref "$1" "$tag")
+	echo $(u_get_ref "${oldref%:*}" "$tag")
 	u_log_unsub
 }
 
