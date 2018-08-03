@@ -226,7 +226,7 @@ u_open_layer () {
 	shift
 	bundle=$(mktemp -udp "${BUILDDIR:-.}" bundle.XXXX)
 	u_log_info "Unpacking image ref '%s' as '%s'" "${img#"${BUILDDIR:-.}/"}" "$bundle"
-	${UMOCI} unpack --image "$img" "$bundle" "$@"
+	${UMOCI} unpack "$@" --image "$img" "$bundle"
 	echo "$bundle"
 }
 
@@ -238,7 +238,7 @@ u_continue_layer () {
 	bundle="${1:?$usg}"
 	shift 2
 	u_log_info "Repacking changes from '%s' into image ref '%s'" "$bundle" "${img#"${BUILDDIR:-.}/"}"
-	${UMOCI} repack --refresh-bundle --image "$img" "$bundle" "$@"
+	${UMOCI} repack "$@" --refresh-bundle --image "$img" "$bundle"
 }
 
 u_close_layer () {
@@ -249,7 +249,7 @@ u_close_layer () {
 	bundle="${1:?$usg}"
 	shift 2
 	u_log_info "Repacking changes from '%s' into image ref '%s'" "$bundle" "${img#"${BUILDDIR:-.}/"}"
-	${UMOCI} repack --image "$img" "$bundle" "$@"
+	${UMOCI} repack "$@" --image "$img" "$bundle"
 	u_log_info "Removing '%s'" "$bundle"
 	rm -rf "$bundle"
 }
