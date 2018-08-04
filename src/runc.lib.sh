@@ -33,11 +33,42 @@ u_run () {
 
 	[ $# -ge 1 ] || return
 
+	_u_patch_bundle "$bundle"
+
+	instance=$(_u_gen_instance_name)
+
+	u_log_info "Creating container '%s' from bundle '%s'" "$instance" "$bundle"
+	${RUNC} create -b "$bundle" "$instance"
+	u_log_info "Running command in container '%s': %s" "$instance" "$*"
+	if [ "$color" -a -t 1 ]; then
+		{
+			{
+				${RUNC} exec $options "$instance" "$@" | sed -u "s/^/$(tput setaf 10)sout: /"
+			} 3>&2 2>&1 1>&3 3>&- | sed -u "s/^/$(tput setaf 9)serr: /"
+		} 2>&1 | sed -u "s/$/$(tput sgr0)/"
+	else
+		${RUNC} exec $options "$instance" "$@"
+	fi
+	u_log_info "Removing container '%s'" "$instance"
+	${RUNC} delete "$instance"
+
+	u_log_dbg "Restoring original config.json for bundle '%s'" "$bundle"
+	mv -f "${bundle}/config.json.u_run_orig" "${bundle}/config.json"
+}
+
+### internal
+
+_u_patch_bundle () {
+	local bundle="${1:?}" bg=1
+	[ "$2" = "--fg" ] && bg=""
+
 	u_log_dbg "Patching config.json for bundle '%s'" "$bundle"
 	mv "${bundle}/config.json" "${bundle}/config.json.u_run_orig"
-	sed -e '
+	sed ${bg:+-e '
 		# disable terminal
 		/terminal/ s/\(terminal[": ]\+\)true/\1false/
+		'} \
+		-e '
 
 		# remove network namespace to allow access to host network
 		/namespaces/ { :n; s/,\?[[:space:]]*{[[:space:]]*"\?type[": ]\+network"\?[[:space:]]*}//; t e; N; b n; :e }
@@ -67,23 +98,8 @@ u_run () {
 			i {"type": "bind", "source": "/etc/resolv.conf", "destination": "/etc/resolv.conf", "options": ["rbind", "ro"]},
 		}
 		' "${bundle}/config.json.u_run_orig" > "${bundle}/config.json"
+}
 
-	instance=$(mktemp -u u_run-temp-instance-XXXX)
-	u_log_info "Creating container '%s' from bundle '%s'" "$instance" "$bundle"
-	${RUNC} create -b "$bundle" "$instance"
-	u_log_info "Running command in container '%s': %s" "$instance" "$*"
-	if [ "$color" -a -t 1 ]; then
-		{
-			{
-				${RUNC} exec $options "$instance" "$@" | sed -u "s/^/$(tput setaf 10)sout: /"
-			} 3>&2 2>&1 1>&3 3>&- | sed -u "s/^/$(tput setaf 9)serr: /"
-		} 2>&1 | sed -u "s/$/$(tput sgr0)/"
-	else
-		${RUNC} exec $options "$instance" "$@"
-	fi
-	u_log_info "Removing container '%s'" "$instance"
-	${RUNC} delete "$instance"
-
-	u_log_dbg "Restoring original config.json for bundle '%s'" "$bundle"
-	mv -f "${bundle}/config.json.u_run_orig" "${bundle}/config.json"
+_u_gen_instance_name () {
+	mktemp -u u_run-temp-instance-XXXX
 }
