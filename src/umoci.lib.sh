@@ -44,9 +44,15 @@ u_clone_image () {
 		chmod $(printf %o $((0777 & ~$(umask)))) "$path"
 		u_log_dbg "Created image '%s'" "${path#"${BUILDDIR:-.}/"}"
 		u_log_info "Cloning image '%s' to '%s'" "${src#"${BUILDDIR:-.}/"}" "${path#"${BUILDDIR:-.}/"}"
-		u_log_dbg "Copying image blobs"
-		# hardlink files in blobs to save space
-		cp -r -l "${src}/blobs" "$path"
+		# check if we have permissions and whether we are on the same filesystem before trying to hardlink
+		if [ -w "${src}/blobs" ] && [ "$(stat -c '%d' "${src}/blobs")" = "$(stat -c '%d' "$path")" ]; then
+			# hardlink files in blobs to save space
+			u_log_dbg "Hardlinking image blobs"
+			cp -r -l "${src}/blobs" "$path"
+		else
+			u_log_dbg "Copying image blobs"
+			cp -r "${src}/blobs" "$path"
+		fi
 		u_log_dbg "Copying other image files"
 		# copy everything else normally
 		cp -r $(find "$src" -mindepth 1 -maxdepth 1 ! -path "${src}/blobs") "$path"
